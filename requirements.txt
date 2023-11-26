@@ -1,0 +1,8 @@
+ipykernel
+pandas
+tensorflow
+scikit-learn
+missingno
+matplotlib
+nltk
+numpy
