@@ -1,4 +1,5 @@
 ipykernel
+python-leetcode
 pandas
 tensorflow
 scikit-learn
@@ -6,3 +7,6 @@ missingno
 matplotlib
 nltk
 numpy
+keras_tuner
+beautifulsoup4
+imbalanced-learn
