@@ -1,0 +1,1 @@
+{"embedding_dim": 224, "rnn_units": 128, "rnn_dropout": 0.2, "rnn_recurrent_dropout": 0.2, "rnn_type": "gru", "learning_rate": 0.001, "sgd_momentum": 0.8, "optimizer": "adagrad", "tuner/epochs": 4, "tuner/initial_epoch": 2, "tuner/bracket": 4, "tuner/round": 1, "tuner/trial_id": "0005"}
