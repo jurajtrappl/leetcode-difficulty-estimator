@@ -1,5 +1,8 @@
+from collections import Counter
 import numpy as np
 from sklearn.model_selection import train_test_split
+
+SEED = 42
 
 # 1. Load the dataset.
 with open('leetcode_problems_dataset.json', 'r') as f:
