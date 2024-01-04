@@ -16,6 +16,8 @@ import sklearn.svm
 import csv
 import sklearn.model_selection
 
+from sklearn.metrics import f1_score
+
 parser = argparse.ArgumentParser()
 # These arguments will be set appropriately by ReCodEx, even if you change them.
 parser.add_argument("--seed", default=42, type=int, help="Random seed")
@@ -33,7 +35,6 @@ parser.add_argument("--w_mf", default=None, type=int, help="Word max features")
 parser.add_argument("--hidden_layer", default=1024, type=int, help="Hidden layer size")
 parser.add_argument("--alpha", default=0.0005, type=float, help="Alpha for L2 regularization")
 parser.add_argument("--activation", default="relu", type=str, help="Activation function")
-
 def convert_dfficulty_class(name):
     if name == "Easy":
         return 0
@@ -58,7 +59,7 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
     problems = [problem[0] for problem in problems_without_html]
     difficulty_classes = [convert_dfficulty_class(problem[1]) for problem in problems_without_html]
     
-    X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(problems, difficulty_classes, random_state=args.seed, stratify=difficulty_classes)
+    X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(problems, difficulty_classes, random_state=args.seed, stratify=difficulty_classes, test_size=0.2)
 
     model = sklearn.pipeline.Pipeline([
         ("feature_extraction",
@@ -72,11 +73,11 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
                     binary=args.c_tf == "binary", sublinear_tf=args.c_tf == "log", max_features=args.c_mf)),
             ] if args.c_n else []))),
         ("estimator", {
-            "perc": sklearn.linear_model.Perceptron(tol=1e-6, early_stopping=True, validation_fraction=0.1, verbose=1),
-            "mlp_c": sklearn.neural_network.MLPClassifier(hidden_layer_sizes=args.hidden_layer, max_iter=100, verbose=1, alpha=args.alpha, early_stopping=True, activation=args.activation),
+            "perc": sklearn.linear_model.Perceptron(tol=1e-6, early_stopping=True, validation_fraction=0.1, verbose=1, penalty="l2", random_state=args.seed),
+            "mlp_c": sklearn.neural_network.MLPClassifier(hidden_layer_sizes=args.hidden_layer, max_iter=7, verbose=1, alpha=args.alpha, early_stopping=True, activation=args.activation),
             "mlp_r": sklearn.neural_network.MLPRegressor(hidden_layer_sizes=args.hidden_layer, max_iter=100, verbose=1, alpha=args.alpha, early_stopping=True, activation=args.activation),
-            "svm": sklearn.svm.SVC(verbose=1),
-            "lsvm": sklearn.svm.LinearSVC(verbose=1),
+            "svm": sklearn.svm.SVC(verbose=1, random_state=args.seed),
+            "lsvm": sklearn.svm.LinearSVC(verbose=1, random_state=args.seed),
         }[args.model]),
     ])
 
@@ -84,6 +85,11 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
     model.fit(X_train, y_train)
     print('Test accuracy:')
     print(model.score(X_test, y_test))
+
+    print('Test F1 score:')
+    print(f1_score(y_test, model.predict(X_test), average='macro'))
+    print(f1_score(y_test, model.predict(X_test), average='micro'))
+
 
     if args.model == "mlp_r":
         print('Test RMSE:')
@@ -93,7 +99,7 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
     if args.model == "lsvm" or args.model == "svm":
         model_name = f"{args.model}_{args.w_n}_{args.c_n}"
     else:
-        model_name = f"{args.model}_{args.w_n}_{args.c_n}_{args.hidden_layer}_{args.alpha}"
+        model_name = f"{args.model}_{args.w_n}_{args.c_n}_{args.hidden_layer}_{args.alpha}_{args.activation}"
     with lzma.open(f"models/{model_name}.pickle", "wb") as model_file:
         pickle.dump(model, model_file)
     print(f"Model saved to models/{model_name}.pickle")
