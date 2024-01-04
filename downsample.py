@@ -1,3 +1,6 @@
+import numpy as np
+from sklearn.model_selection import train_test_split
+
 # 1. Load the dataset.
 with open('leetcode_problems_dataset.json', 'r') as f:
     problems = json.load(f)
@@ -48,3 +51,9 @@ def downsample_dataset(features, labels):
 
 # 5. Downsample dataset.
 X, y = downsample_dataset(X, y)
+
+# 6. (Optional)
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=SEED, stratify=y)
+X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.5, random_state=SEED, stratify=y_val)
+
+X_train, X_val, X_test, y_train, y_val, y_test = np.array(X_train), np.array(X_val), np.array(X_test), np.array(y_train), np.array(y_val), np.array(y_test)
