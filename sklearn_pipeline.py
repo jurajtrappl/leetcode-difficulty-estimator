@@ -63,7 +63,7 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
     
 
     # 1. Load the dataset.
-    with open('leetcode_problems_dataset.json', 'r') as f:
+    with open('data/leetcode_problems_dataset.json', 'r') as f:
         problems = json.load(f)
         
     # 2. Remove HTML tags.
@@ -145,14 +145,27 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
 
   
     model.fit(X_train, y_train)
-    print('Test accuracy:')
+    print('Test score:')
     print(model.score(X_test, y_test))
 
     predictions = model.predict(X_test)
+    print(predictions)
 
+    if args.model == "mlp_r":
+        print('Test RMSE:')
+        print(np.sqrt(np.mean((predictions - y_test) ** 2)))
+
+
+        # classsify all predictions from 0.75 to 1.25 as 1
+        predictions = np.where(predictions < 0.66, 0, predictions)
+        predictions = np.where(predictions > 1.33, 2, predictions)
+        predictions = np.where((predictions >= 0.66) & (predictions <= 1.33), 1, predictions)
     print('Test F1 score:')
     print(f1_score(y_test, predictions, average='macro'))
     print(f1_score(y_test, predictions, average='micro'))
+
+
+
 
 
     cm = confusion_matrix(y_test, predictions)
@@ -166,12 +179,6 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
     plt.xlabel('Predicted Label')
     plt.savefig(f"{args.model}.png", dpi=300)
     plt.show()
-
-
-    if args.model == "mlp_r":
-        print('Test RMSE:')
-        print(np.sqrt(np.mean((model.predict(X_test) - y_test) ** 2)))
-
         
     if args.model == "lsvm" or args.model == "svm":
         model_name = f"{args.model}_{args.w_n}_{args.c_n}"
