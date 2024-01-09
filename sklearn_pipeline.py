@@ -27,6 +27,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
+from sklearn.decomposition import TruncatedSVD
+
 
 
 from sklearn.metrics import f1_score
@@ -134,6 +136,7 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
                     lowercase=args.c_l, analyzer="char_wb" if args.c_wb else "char", ngram_range=(1, args.c_n),
                     binary=args.c_tf == "binary", sublinear_tf=args.c_tf == "log", max_features=args.c_mf)),
             ] if args.c_n else []))),
+            ("svd", TruncatedSVD(n_components=100)),
         ("estimator", {
             "perceptron": sklearn.linear_model.Perceptron(tol=1e-6, early_stopping=True, validation_fraction=0.1, verbose=1, penalty="l2", random_state=args.seed),
             "mlp_c": sklearn.neural_network.MLPClassifier(hidden_layer_sizes=args.hidden_layer, max_iter=100, verbose=1, alpha=args.alpha, early_stopping=True, activation=args.activation),
@@ -157,9 +160,9 @@ def main(args: argparse.Namespace) -> Optional[npt.ArrayLike]:
 
 
         # classsify all predictions from 0.75 to 1.25 as 1
-        predictions = np.where(predictions < 0.66, 0, predictions)
-        predictions = np.where(predictions > 1.33, 2, predictions)
-        predictions = np.where((predictions >= 0.66) & (predictions <= 1.33), 1, predictions)
+        predictions = np.where(predictions < 0.75, 0, predictions)
+        predictions = np.where(predictions > 1.25, 2, predictions)
+        predictions = np.where((predictions >= 0.75) & (predictions <= 1.25), 1, predictions)
     print('Test F1 score:')
     print(f1_score(y_test, predictions, average='macro'))
     print(f1_score(y_test, predictions, average='micro'))
