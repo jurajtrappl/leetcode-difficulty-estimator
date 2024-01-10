@@ -51,6 +51,37 @@ Obtained from stratified 5-fold CV that averages f1 scores, tf-idf features:
 | 1. layer embeddings | 51.7 |
 | 2. layer embeddings | 49.1 |
 
+**In-context learning classification**
+
+Using Llama-13b-chat from HF. Selected one representative from each difficulty (tried to take a problem with ~25% acceptance rate) and created a few-shot learning prompt. Built with LangChain.
+
+```py
+prompt = PromptTemplate.from_template(
+    """
+    <s>[INST] <<SYS>>
+    Task: Given a programming problem description, predict its difficulty.
+    The difficulty can be one of easy, medium and hard.
+    
+    Example:
+    Given a programming problem description: {programming_problem_example_1}, the difficulty is:
+    easy
+
+    Example:
+    Given a programming problem description: {programming_problem_example_1}, the difficulty is:
+    medium
+    
+    Example:
+    Given a programming problem description: {programming_problem_example_1}, the difficulty is:
+    hard
+
+    <<SYS>>
+    Now, given a programming problem description: {programming_problem}, the difficulty is:
+    [/INST]
+    """
+)
+```
+
+3 training examples, 2360 testing examples - ~40% accuracy.
 
 ## Final words
 
