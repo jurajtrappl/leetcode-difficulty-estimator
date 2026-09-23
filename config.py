@@ -48,15 +48,13 @@ class Settings:
     class_weighting: str = "balanced"   # "balanced" (rare classes count more) or "none"
 
     # --- pretrained models ------------------------------------------------------------------
-    bert_model: str = "bert-base-uncased"
     laya_model: str = "convaiinnovations/laya"
-    llama_model: str = "meta-llama/Llama-2-13b-chat-hf"
+    llama_model: str = "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"   # MLX, 4-bit (~5 GB)
     max_tokens: int = 512               # truncation length for transformer inputs
 
     # --- outputs ----------------------------------------------------------------------------
     figures_dir: Path = ROOT / "confusion_matrices"     # plots (committed)
     models_dir: Path = ROOT / "trained_models"           # saved Keras models + best hyperparameters
-    embeddings_dir: Path = ROOT / "bert_embeddings"      # embedding-projector TSVs
     results_dir: Path = ROOT / "results"                 # caches, tuner trials, result tables
     fig_dpi: int = 200
 
@@ -96,7 +94,7 @@ def _from_env(base: Settings) -> Settings:
 
 CFG = _from_env(Settings())
 
-for _d in (CFG.figures_dir, CFG.models_dir, CFG.embeddings_dir, CFG.results_dir):
+for _d in (CFG.figures_dir, CFG.models_dir, CFG.results_dir):
     _d.mkdir(parents=True, exist_ok=True)
 
 

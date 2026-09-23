@@ -25,7 +25,10 @@ With that test size, the 95% interval on macro-F1 is roughly ±5 points.
 
 ### Classification
 
-- Perceptron, Linear SVM, MLP classifier, MLP with BERT embeddings as features
+- Perceptron, Linear SVM, RBF SVM, MLP classifier (`sklearn_pipeline.ipynb`)
+- Bidirectional LSTM/GRU trained from scratch (`rnn.ipynb`)
+- Llama 3.1 8B Instruct, zero- and few-shot (`llama_few_shot.ipynb`)
+- Laya decision model: zero-shot, calibrated, and as a feature extractor (`laya_experiments.ipynb`)
 
 ### Regression
 
@@ -47,7 +50,7 @@ SAMPLE_LIMIT=300 jupyter lab              # dry run on a stratified 300-problem 
 ```
 
 Outputs: plots → `confusion_matrices/`, saved models and best hyperparameters → `trained_models/`,
-embedding-projector files → `bert_embeddings/`, caches and tuner trials → `results/`.
+caches, result tables and tuner trials → `results/`.
 
 ## Experiment tracking (MLflow)
 
@@ -57,10 +60,9 @@ no license). Experiments are per model family, runs share one naming scheme: `<f
 | Notebook | Experiment / runs | What is logged |
 |---|---|---|
 | `sklearn_pipeline.ipynb` | `.../sklearn`: `sklearn-<model>-tuned-s42` ×5, `sklearn-comparison-s42` | search space, best setting, CV + test scores, confusion matrix, every tried setting as a table |
-| `bert_embeddings_mlp.ipynb` | `.../bert`: `bert-<experiment>-s42` | best hyperparameters, per-epoch loss/metrics, test scores, confusion matrix |
 | `rnn.ipynb` | `.../rnn`: `rnn-bi<lstm\|gru>-tuned-s42` | every tried setting, CV re-check of the top 3, per-epoch curves, test scores, confusion matrix |
 | `laya_experiments.ipynb` | `.../laya`: `laya-<checkpoint>-s42` | the full results table, calibration metrics, all figures |
-| `llama2-few-shot-leetcode.ipynb` | `.../llama`: `llama-<model>-few-shot-s42` | accuracy / macro-F1 / QWK, confusion matrix |
+| `llama_few_shot.ipynb` | `.../llama`: `llama-llama3.1-8b-<0\|6>shot-s42` | raw + calibrated test scores, log-loss / ECE, confusion matrices, prompt settings |
 
 Every run also stores all of `config.py` as parameters (`settings.*`) and the git commit, and runs with
 `SAMPLE_LIMIT` set are tagged `dry_run`, so you can filter them out.
@@ -87,56 +89,19 @@ The earlier numbers here (~58-61%) were measured on a downsampled, balanced set 
 class in LeetCode-ID order (all Hard problems, but Medium only from the oldest ~940). Problem age then leaked the label,
 which inflated the scores, and 57% of the data was thrown away.
 
-**Classifier on top of contextualized BERT embeddings**:
-
-- `bert-base-uncased`
-  - no fine-tuning (not enough training examples)
-  - mean pooling, final feature size is _(768,)_
-- Keras 3 (TensorFlow 2.21); originally TensorFlow 2.12
-  - HyperBand hyperparameter optimization from KerasTuner
-
-Embeddings are computed with the PyTorch `BertModel`; the classifier is Keras 3 (TensorFlow 2.21), trained with class weights and tuned on validation balanced accuracy.
-
-| model | test accuracy |
-|---|---|
-| 1. layer embeddings | to re-run (old: 51.7, downsampled) |
-| 2. layer embeddings | to re-run (old: 49.1, downsampled) |
-
 **RNN** (`rnn.ipynb`): bidirectional LSTM/GRU trained from scratch on statement + constraints, with numbers turned
 into order-of-magnitude tokens (`10^5` → `<1e5>`). 20 random settings, top 3 re-checked with 3-fold CV, macro-F1
 as the score; needs a re-run.
 
-**In-context learning classification**
+**In-context learning classification** (`llama_few_shot.ipynb`)
 
-Using Llama-13b-chat from HF. Selected one representative from each difficulty (tried to take a problem with ~25% acceptance rate) and created a few-shot learning prompt. Built with LangChain.
+Llama 3.1 8B Instruct, 4-bit, run locally with MLX on Apple Silicon (≤16 GB memory). No text generation: the model
+reads a Llama 3 chat prompt (rules, optionally 2 solved examples per class from the training part) and we take its
+next-token probabilities for `Easy` / `Medium` / `Hard`. Zero-shot and 6-shot, each raw and calibrated
+(temperature + class bias fitted on 600 training problems); evaluated on the shared test set; needs a run.
 
-```py
-prompt = PromptTemplate.from_template(
-    """
-    <s>[INST] <<SYS>>
-    Task: Given a programming problem description, predict its difficulty.
-    The difficulty can be one of easy, medium and hard.
-    
-    Example:
-    Given a programming problem description: {programming_problem_example_1}, the difficulty is:
-    easy
-
-    Example:
-    Given a programming problem description: {programming_problem_example_1}, the difficulty is:
-    medium
-    
-    Example:
-    Given a programming problem description: {programming_problem_example_1}, the difficulty is:
-    hard
-
-    <<SYS>>
-    Now, given a programming problem description: {programming_problem}, the difficulty is:
-    [/INST]
-    """
-)
-```
-
-3 training examples, 2360 testing examples - ~40% accuracy.
+The original 2024 version (Llama 2 13B via LangChain, ~40% accuracy on all problems) had a prompt bug: the same
+Easy example was shown three times, labelled easy, medium and hard. Its 40% is below always guessing Medium (51%).
 
 ## Final words
 

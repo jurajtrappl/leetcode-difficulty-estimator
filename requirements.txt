@@ -14,3 +14,4 @@ scipy
 seaborn
 python-dotenv
 mlflow==3.16.1  # same version as the UI image in docker-compose.yml
+mlx-lm; sys_platform == "darwin"  # llama_few_shot.ipynb (Apple Silicon)
