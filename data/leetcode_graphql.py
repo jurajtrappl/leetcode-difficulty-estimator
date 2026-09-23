@@ -2,8 +2,17 @@ import json
 import leetcode
 import leetcode.auth
 
-# get the next two values from your browser cookies
-leetcode_session = "***REMOVED_LEETCODE_SESSION***"
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # so `config` imports when run as a script
+from config import CFG  # also loads .env from the project root
+
+# LEETCODE_SESSION comes from your browser cookies, stored in .env (see .env.example)
+leetcode_session = os.environ.get("LEETCODE_SESSION")
+if not leetcode_session:
+    raise RuntimeError("LEETCODE_SESSION is not set. Copy .env.example to .env and fill it in.")
 csrf_token = leetcode.auth.get_csrf_cookie(leetcode_session)
 
 configuration = leetcode.Configuration()
@@ -19,7 +28,7 @@ api_instance = leetcode.DefaultApi(leetcode.ApiClient(configuration))
 # Lets find out the list of names of all problems.
 variables = {
     "categorySlug": "",
-    "limit": 2950, # number of problems i found somewhere that is on leetcode in total
+    "limit": 2950, # number of problems I found somewhere that is on leetcode in total
     "skip": 0,
     "filters": {}
 }
@@ -78,5 +87,5 @@ for title_slug in problems:
     }
     
 # Write out results to file.
-with open("leetcode_problems_dataset.json", "w") as f:
+with open(CFG.dataset_path, "w") as f:
     json.dump(result, f)

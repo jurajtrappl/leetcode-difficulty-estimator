@@ -2,11 +2,15 @@ ipykernel
 python-leetcode
 pandas
 tensorflow
-scikit-learn
+scikit-learn>=1.7  # MLP sample_weight
 missingno
 matplotlib
 nltk
 numpy
 keras_tuner
 beautifulsoup4
-imbalanced-learn
+laya
+scipy
+seaborn
+python-dotenv
+mlflow==3.16.1  # same version as the UI image in docker-compose.yml

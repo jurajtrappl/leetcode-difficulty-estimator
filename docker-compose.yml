@@ -1,0 +1,33 @@
+# MLflow UI for this project: browse every logged run at http://localhost:5050.
+#
+#   docker compose up -d      # start (run it from this folder)
+#   docker compose down       # stop; runs stay in ./mlflow
+#   docker compose logs -f    # watch the server log
+#
+# The notebooks don't need this container to log: tracking.py writes straight into ./mlflow
+# (mlflow.db = runs/params/metrics, artifacts/ = tables, figures). The container only shows it.
+# ./mlflow is mounted at the same absolute path inside the container (${PWD}/mlflow), because the
+# database stores artifact locations as absolute paths.
+#
+# No license, no account: MLflow is open source (Apache 2.0). Keep the image version equal to the
+# mlflow version in requirements.txt.
+
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.16.1
+    container_name: mlflow-ui
+    ports:
+      # macOS already uses port 5000 (AirPlay Receiver), so the UI is on 5050.
+      # Only reachable from this machine; change with MLFLOW_PORT=... in .env.
+      - "127.0.0.1:${MLFLOW_PORT:-5050}:5000"
+    volumes:
+      - ./mlflow:${PWD}/mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///${PWD}/mlflow/mlflow.db
+      --host 0.0.0.0
+      --port 5000
+    restart: unless-stopped
+    environment:
+      MLFLOW_DISABLE_TELEMETRY: "true"   # MLflow 3 sends anonymous usage stats by default
+      DO_NOT_TRACK: "true"
