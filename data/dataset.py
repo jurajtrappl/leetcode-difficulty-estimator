@@ -47,12 +47,16 @@ def compact_statement(text: str) -> str:
     return re.sub(r"\n\s*\n+", "\n", s).strip()
 
 
-def load_problems(keep_sup: bool = None):
+NEW_DATASET_PATH = CFG.dataset_path.with_name("leetcode_new_problems.json")   # data/fetch_new_problems.py
+
+
+def load_problems(keep_sup: bool = None, path=None):
     """All non-premium problems in file order -> (slugs, texts, labels); labels are 0/1/2 = Easy/Medium/Hard.
 
-    With CFG.sample_limit = N > 0, a stratified sample of N problems (for quick dry runs).
+    path: another dataset file, e.g. NEW_DATASET_PATH (problems published after the original download).
+    With CFG.sample_limit = N > 0, a stratified sample of N problems of the main dataset (for quick dry runs).
     """
-    with open(CFG.dataset_path, "r") as f:
+    with open(path or CFG.dataset_path, "r") as f:
         problems = json.load(f)
     slugs, texts, labels = [], [], []
     for slug, p in problems.items():
@@ -62,7 +66,7 @@ def load_problems(keep_sup: bool = None):
         texts.append(html_to_text(p["content"], keep_sup))
         labels.append(LABELS.index(p["difficulty"]))
     slugs, texts, labels = np.array(slugs), np.array(texts, dtype=object), np.array(labels)
-    if 0 < CFG.sample_limit < len(labels):
+    if path is None and 0 < CFG.sample_limit < len(labels):
         keep, _ = train_test_split(np.arange(len(labels)), train_size=CFG.sample_limit,
                                    random_state=CFG.seed, stratify=labels)
         keep = np.sort(keep)  # keep file order

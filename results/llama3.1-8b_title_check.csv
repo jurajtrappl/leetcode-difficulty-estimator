@@ -1,0 +1,6 @@
+input,accuracy,macro_f1,qwk
+"Llama 0-shot, full statement",0.5485,0.4705,0.3627
+"Llama 0-shot, title only",0.5823,0.4932,0.3959
+"Llama 6-shot, full statement",0.6371,0.5717,0.5306
+"Llama 6-shot, title only",0.6160,0.5394,0.4616
+"TF-IDF + logistic regression, title only (no memory)",0.4008,0.3799,0.1438
