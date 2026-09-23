@@ -11,6 +11,7 @@ weights instead, and models are compared on macro-F1 on a test set that has the 
     X_train, X_val, X_test, y_train, y_val, y_test = load_split(with_val=True)
 """
 import json
+import re
 
 import numpy as np
 from bs4 import BeautifulSoup
@@ -31,6 +32,19 @@ def html_to_text(html: str, keep_sup: bool = None) -> str:
         for tag in soup.find_all("sup"):
             tag.replace_with("^" + tag.get_text())
     return soup.get_text().replace("\xa0", " ")
+
+
+def compact_statement(text: str) -> str:
+    """Statement + constraints (+ follow-up), without the worked examples.
+
+    The examples are long (arrays, explanations) and say little about difficulty; the constraints
+    (n <= 10^5 ...) say a lot. Used by models with a short input window (Laya, the RNN).
+    """
+    statement = re.split(r"\n\s*Example\s*1\s*:", text, maxsplit=1)[0]
+    m = re.search(r"Constraints\s*:(.*)", text, flags=re.S)
+    tail = ("\nConstraints:" + m.group(1)) if m else ""
+    s = statement.strip() + "\n" + tail
+    return re.sub(r"\n\s*\n+", "\n", s).strip()
 
 
 def load_problems(keep_sup: bool = None):

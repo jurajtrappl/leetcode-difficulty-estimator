@@ -58,7 +58,7 @@ no license). Experiments are per model family, runs share one naming scheme: `<f
 |---|---|---|
 | `sklearn_pipeline.ipynb` | `.../sklearn`: `sklearn-<model>-tuned-s42` ×5, `sklearn-comparison-s42` | search space, best setting, CV + test scores, confusion matrix, every tried setting as a table |
 | `bert_embeddings_mlp.ipynb` | `.../bert`: `bert-<experiment>-s42` | best hyperparameters, per-epoch loss/metrics, test scores, confusion matrix |
-| `rnn.ipynb` | `.../rnn`: `rnn-<lstm\|gru>-s42` | same as BERT |
+| `rnn.ipynb` | `.../rnn`: `rnn-bi<lstm\|gru>-tuned-s42` | every tried setting, CV re-check of the top 3, per-epoch curves, test scores, confusion matrix |
 | `laya_experiments.ipynb` | `.../laya`: `laya-<checkpoint>-s42` | the full results table, calibration metrics, all figures |
 | `llama2-few-shot-leetcode.ipynb` | `.../llama`: `llama-<model>-few-shot-s42` | accuracy / macro-F1 / QWK, confusion matrix |
 
@@ -102,7 +102,9 @@ Embeddings are computed with the PyTorch `BertModel`; the classifier is Keras 3 
 | 1. layer embeddings | to re-run (old: 51.7, downsampled) |
 | 2. layer embeddings | to re-run (old: 49.1, downsampled) |
 
-The RNN (`rnn.ipynb`) no longer uses SMOTE (it was interpolating token IDs); it also needs a re-run.
+**RNN** (`rnn.ipynb`): bidirectional LSTM/GRU trained from scratch on statement + constraints, with numbers turned
+into order-of-magnitude tokens (`10^5` → `<1e5>`). 20 random settings, top 3 re-checked with 3-fold CV, macro-F1
+as the score; needs a re-run.
 
 **In-context learning classification**
 
