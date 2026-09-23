@@ -1,0 +1,54 @@
+{
+  "perceptron": {
+    "clf__estimator__alpha": "1.987021538542864e-06",
+    "clf__weight_power": "1.0",
+    "features__char__lowercase": "True",
+    "features__char__ngram_range": "(1, 3)",
+    "features__word__lowercase": "False",
+    "features__word__ngram_range": "(1, 3)",
+    "reduce": "SelectPercentile(percentile=5)"
+  },
+  "lsvm": {
+    "clf__estimator__C": "0.7707580772445938",
+    "clf__weight_power": "1.0",
+    "features__char__lowercase": "True",
+    "features__char__ngram_range": "(2, 4)",
+    "features__word__lowercase": "True",
+    "features__word__ngram_range": "(1, 3)",
+    "reduce": "passthrough"
+  },
+  "svm": {
+    "clf__estimator__C": "3.699972431463808",
+    "clf__estimator__gamma": "scale",
+    "clf__weight_power": "0.5",
+    "features__char__lowercase": "False",
+    "features__char__ngram_range": "(1, 3)",
+    "features__word__lowercase": "True",
+    "features__word__ngram_range": "(1, 3)",
+    "reduce": "SelectPercentile(percentile=1)"
+  },
+  "mlp_c": {
+    "clf__estimator__alpha": "0.01216413935141706",
+    "clf__estimator__hidden_layer_sizes": "(16,)",
+    "clf__estimator__learning_rate_init": "0.007121996518301621",
+    "clf__weight_power": "0.5",
+    "features__char__lowercase": "True",
+    "features__char__ngram_range": "(1, 5)",
+    "features__word__lowercase": "True",
+    "features__word__ngram_range": "(1, 2)",
+    "reduce": "SelectPercentile(percentile=1)"
+  },
+  "mlp_r": {
+    "clf__estimator__alpha": "0.059076435345639666",
+    "clf__estimator__hidden_layer_sizes": "(128,)",
+    "clf__estimator__learning_rate_init": "0.0003797544798678418",
+    "clf__high": "1.35",
+    "clf__low": "0.65",
+    "clf__weight_power": "0.5",
+    "features__char__lowercase": "True",
+    "features__char__ngram_range": "(2, 4)",
+    "features__word__lowercase": "True",
+    "features__word__ngram_range": "(1, 1)",
+    "reduce": "SelectPercentile(percentile=5)"
+  }
+}
