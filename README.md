@@ -1,19 +1,79 @@
-# leetcode-difficulty-estimator
+# LeetCode difficulty estimator
 
-Semestral project for Neural Networks course at MFF, Charles University.
+Can a model tell how hard a programming problem is just by reading it? Given a LeetCode problem statement, predict
+its difficulty: **Easy / Medium / Hard**. Classic machine learning, a recurrent network and a pretrained
+LLM (Llama 3.1 8B) are compared on one shared, leak-free test set.
 
-Authors: Mihal Filip, Trappl Juraj 2024.
+**Key findings**
 
-The work is summarized in `slides.pdf`.
+- **Text-only models plateau at about 0.50 macro-F1.** Five tuned TF-IDF + scikit-learn models and a BiGRU trained
+  from scratch all land within 0.50–0.53 (always answering "Medium": 0.23).
+- **Llama 3.1 8B, run locally (4-bit, MLX), reaches 0.62** with 6 solved examples in the prompt, calibration and a
+  macro-F1-tuned decision rule. It reads next-token probabilities, no text generation.
+- **The lead is real, not memorised.** Llama *does* remember LeetCode: with only the problem title it is almost as
+  good as with the full statement. But on 876 problems published after its training cutoff, its full-statement score
+  holds (0.63) while the title-only score drops by 0.09.
+- **Revisiting the 2024 version found a data leak** (the downsampling kept the oldest problems of each class, so
+  problem age predicted the label) that had inflated the reported accuracy. Fixed, with all data kept.
+
+![Summary of results](confusion_matrices/summary.png)
+
+## Authors and contributions
+
+The project started in 2023–24 as a semestral project for the Neural Networks course at MFF, Charles University
+(Faculty of Mathematics and Physics), by **Juraj Trappl** and **Filip Mihal**. In 2026 Juraj revisited it alone:
+reviewed the original work, fixed its mistakes and extended it. The 2024 slides and plots were removed, as their
+numbers were affected by the leak described below (they are still in the git history).
+
+**2023–24 (course project)**
+
+| Juraj Trappl | Filip Mihal |
+|---|---|
+| Data collection: LeetCode GraphQL scraper and dataset (`data/leetcode_graphql.py`) | Text preprocessing: HTML-free problem texts |
+| TF-IDF + MLP experiments (PCA / t-SNE reductions), trained on MetaCentrum | scikit-learn pipeline: TF-IDF features, perceptron, linear and RBF SVM, MLP classifier and regressor, SVD / feature selection |
+| RNN with Keras Tuner | Visualisation notebook |
+| BERT contextual embeddings + MLP (pooling variants, CNN feature extraction, SMOTE), class downsampling | |
+| Llama 2 few-shot prompting, slides, README | |
+
+**2026 (rework, Juraj Trappl)**
+
+- Found and fixed the problems of the original version: the downsampling leak, HTML cleaning that turned
+  `10^5` into `105`, the RNN vocabulary built on test data, and a Llama 2 prompt that showed the same example with
+  all three labels (details under [What was wrong in the 2024 version](#what-was-wrong-in-the-2024-version)).
+- One evaluation protocol for every model: all data, one stratified train/test split, class weights, macro-F1 / QWK
+  with bootstrap intervals; shared config and seeding (`config.py`, `data/dataset.py`).
+- sklearn models re-tuned with the same random-search budget each; RNN rebuilt (order-of-magnitude number tokens,
+  masked BiLSTM/GRU, tuned and CV-checked).
+- New model: Llama 3.1 8B via MLX with calibration and a memorisation check on newly fetched, post-cutoff problems.
+- Engineering: MLflow experiment tracking (local, Docker UI), secrets moved to `.env` and purged from history,
+  resumable caches and "reuse what's already trained" re-runs, dataset rebuilt from committed problem lists.
+
+## Quick start
+
+Python 3.12. The Llama notebook needs a Mac with Apple Silicon (MLX); everything else runs anywhere.
+
+```sh
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python data/rebuild_dataset.py     # downloads the problem statements (not in the repo, see Data), ~1 hour
+jupyter lab                        # open any notebook and run it
+docker compose up -d               # optional: MLflow UI with all runs on http://localhost:5050
+```
 
 ## Task
 
-Given a text description of a programming problem, predict its difficulty - Easy/Medium/Hard. We tried both clasiffication and regression approaches.
+Given a text description of a programming problem, predict its difficulty: Easy, Medium or Hard. Both
+classification and regression (predict a number, cut it into three classes) approaches are compared.
 
 ## Data
 
-Our dataset consists of 2366 free programming problems from the [LeetCode](https://leetcode.com/). We queried the LeetCode GraphQL API to get the data.
-Class imbalance present (~51% Medium, 27% Easy, 22% Hard).
+2,366 free LeetCode problems, downloaded in December 2023 through LeetCode's GraphQL API (~51% Medium, 27% Easy,
+22% Hard), plus 876 problems published later (ID 3000–4059) as an unseen test set for the memorisation check.
+
+**The problem statements are LeetCode's content, so they are not in this repository.** The repo contains only the
+problem lists with their labels, in the original order (`data/problem_list.json`, `data/new_problem_list.json`);
+`python data/rebuild_dataset.py` downloads the statements for exactly those problems, so the split and every result
+line up. (LeetCode occasionally edits a statement, so a rebuilt dataset can differ slightly.)
 
 All models use `data/dataset.py`: it keeps **all** problems (no downsampling), makes one stratified 80/20 train/test split
 (validation, when needed, is carved out of the training part), and handles the imbalance with balanced class weights.
@@ -28,8 +88,6 @@ With that test size, the 95% interval on macro-F1 is roughly ±5 points.
 - Perceptron, Linear SVM, RBF SVM, MLP classifier (`sklearn_pipeline.ipynb`)
 - Bidirectional LSTM/GRU trained from scratch (`rnn.ipynb`)
 - Llama 3.1 8B Instruct, zero- and few-shot (`llama_few_shot.ipynb`)
-- Laya decision model: zero-shot, calibrated, and as a feature extractor (`laya_experiments.ipynb`)
-- Laya fine-tuned: decision head + top encoder layers trained on our training split (`laya_finetune.ipynb`)
 
 ### Regression
 
@@ -55,7 +113,7 @@ caches, result tables and tuner trials → `results/`.
 
 Re-running a notebook reuses what was already trained, as long as its settings haven't changed: the sklearn
 searches (`trained_models/sklearn_<model>.joblib`, only the best setting is refitted), the RNN re-check and model
-(`rnn.keras` + `rnn_meta.json`), the fine-tuned Laya (`laya_finetuned.pt`), and the cached Llama / Laya answers in
+(`rnn.keras` + `rnn_meta.json`), and the cached Llama answers in
 `results/`. A changed setting retrains that part automatically; `RESEARCH = True` / `RETRAIN = True` at the top
 of a notebook forces it.
 
@@ -68,8 +126,6 @@ no license). Experiments are per model family, runs share one naming scheme: `<f
 |---|---|---|
 | `sklearn_pipeline.ipynb` | `.../sklearn`: `sklearn-<model>-tuned-s42` ×5, `sklearn-comparison-s42` | search space, best setting, CV + test scores, confusion matrix, every tried setting as a table |
 | `rnn.ipynb` | `.../rnn`: `rnn-bi<lstm\|gru>-tuned-s42` | every tried setting, CV re-check of the top 3, per-epoch curves, test scores, confusion matrix |
-| `laya_experiments.ipynb` | `.../laya`: `laya-<checkpoint>-s42`, `laya-<checkpoint>-extras-s42` | the full results table, calibration metrics, all figures; F1 bias tuning and the new-problems table |
-| `laya_finetune.ipynb` | `.../laya`: `laya-finetune-top<k>-s42` | per-epoch loss / validation macro-F1, chosen variant, test + new-problem scores, confusion matrices |
 | `llama_few_shot.ipynb` | `.../llama`: `llama-llama3.1-8b-<0\|6>shot-s42` | raw + calibrated test scores, log-loss / ECE, confusion matrices, prompt settings |
 
 Every run also stores all of `config.py` as parameters (`settings.*`) and the git commit, and runs with
@@ -91,20 +147,18 @@ interval on macro-F1 is about **±0.05**, so smaller differences are noise.
 | Model | Notebook | Accuracy | Macro-F1 | QWK |
 |---|---|---|---|---|
 | Always Medium | – | 0.511 | 0.225 | 0.000 |
-| Laya zero-shot (`choice` question) | `laya_experiments` | 0.468 | 0.300 | 0.097 |
 | Llama 3.1 8B zero-shot, calibrated | `llama_few_shot` | 0.548 | 0.470 | 0.363 |
-| TF-IDF + linear SVM (one fixed setting) | `laya_experiments` | 0.544 | 0.477 | 0.362 |
-| Laya embeddings + signal questions → logistic regression | `laya_experiments` | 0.494 | 0.494 | 0.398 |
 | MLP classifier, tuned (best sklearn model by CV) | `sklearn_pipeline` | 0.530 | 0.506 | 0.389 |
+| Perceptron / linear SVM / RBF SVM / MLP regressor, tuned | `sklearn_pipeline` | 0.525–0.576 | 0.496–0.533 | 0.375–0.447 |
 | BiGRU, tuned | `rnn` | 0.544 | 0.509 | 0.351 |
 | Llama 3.1 8B 6-shot (variant picked on the calibration set) | `llama_few_shot` | 0.589 | **0.586** | **0.563** |
 | Llama 3.1 8B 6-shot, calibrated + Easy/Hard shift for macro-F1 | `llama_few_shot` | 0.648 | **0.617** | **0.577** |
 
 **What it says, in short**
 
-1. **Every model that only reads the text lands at about 0.50 macro-F1.** TF-IDF, the tuned MLP, the RNN and a
-   linear probe on Laya's encoder are all within 0.48–0.51, inside each other's noise band. How the text is turned
-   into numbers matters much less than one would hope.
+1. **Every model that only reads the text lands at about 0.50 macro-F1.** The five tuned sklearn models (TF-IDF
+   features) and the RNN are all within 0.50–0.53, inside each other's noise band. How the text is turned into
+   numbers matters much less than one would hope.
 2. **Llama is the only model clearly above that, and the lead is real.** It *has* memorised LeetCode: given only
    the title, it is almost as good as with the whole statement. But on 876 problems published after its training
    cutoff it does just as well (6-shot macro-F1 0.63 vs 0.55 for a TF-IDF model), so its score with the full
@@ -202,35 +256,6 @@ Easy/Hard shift as above.
 
 ![Llama on new problems](confusion_matrices/llama3.1-8b_new_problems.png)
 
-### Laya (`laya_experiments.ipynb`)
-
-Laya is a ModernBERT-large encoder with a small decision head: one forward pass returns calibrated probabilities
-for multiple-choice, score and yes/no questions. We use it three ways:
-
-| Use | Test accuracy | Test macro-F1 | QWK |
-|---|---|---|---|
-| Zero-shot, `choice` question (Easy / Medium / Hard with descriptions) | 0.468 | 0.300 | 0.097 |
-| Zero-shot, `score` question (ordinal 0–2) | 0.462 | 0.311 | 0.135 |
-| Zero-shot + temperature/bias calibration | 0.508 | 0.225 | ≈ 0 |
-| 12 yes/no **signal questions** ("needs DP?", "input ≥ 10^5?", ...) → logistic regression | 0.420 | 0.416 | 0.271 |
-| Encoder embeddings → logistic regression (linear probe) | 0.475 | 0.476 | 0.373 |
-| Embeddings + signals → logistic regression | 0.494 | **0.494** | **0.398** |
-
-* **Zero-shot doesn't work**: it answers Medium 85% of the time, and calibration collapses it to always-Medium,
-  which shows its difficulty answer carries almost no information. The model card warns about this: the base
-  checkpoint is "a fast base to specialise, not a zero-shot decision engine".
-* **Its encoder does know something**: a plain linear model on its embeddings matches TF-IDF and is within noise of
-  the tuned RNN, and its probabilities are well calibrated (ECE 0.043).
-* **The signals are readable**: "Can the input size be 10^5 or larger?" is the strongest push towards Hard, then
-  dynamic programming, advanced data structures and "combines several ideas"; "design a class", "brute force is
-  fast enough" and a confident Easy answer push towards Easy (`confusion_matrices/laya_signal_weights.png`).
-  Each signal alone differs only a little between classes (e.g. large input: 13% / 25% / 27% of Easy / Medium /
-  Hard problems).
-* Laya shows no sign of having memorised LeetCode, so its numbers are "reading" numbers.
-
-*Pending*: Easy/Hard bias tuning and the new-problems check (Extras of `laya_experiments.ipynb`), and fine-tuning
-Laya's head + top encoder layers on our training split (`laya_finetune.ipynb`).
-
 ### What was wrong in the 2024 version
 
 * **Downsampling leak.** The balanced set kept the *first* 514 problems of each class in LeetCode-ID order: all Hard
@@ -238,7 +263,8 @@ Laya's head + top encoder layers on our training split (`laya_finetune.ipynb`).
   problem position alone reached ~56%), which inflated the reported ~58–62% accuracy, and a third of the problems
   (824 of 2366) were thrown away. Now all problems are kept, class weights handle the imbalance, and macro-F1 is reported.
 * **HTML cleaning** turned `10<sup>5</sup>` into `105`, so "n ≤ 10^5" read as "n ≤ 105" in ~65% of problems. Fixed
-  (`10^5`); for TF-IDF it hardly matters (0.484 vs 0.477 macro-F1), for models that read it does.
+  (`10^5`). For TF-IDF it hardly matters (both are just n-grams), but for a model that reads the text,
+  "n ≤ 105" and "n ≤ 100000" are different problems.
 * **Llama 2 prompt bug.** The 2024 prompt showed the same Easy example three times, labelled easy, medium and hard;
   its ~40% accuracy was below always guessing Medium (51%).
 * **RNN.** Vocabulary built from all problems (test included), stopwords like "at most" removed, every number

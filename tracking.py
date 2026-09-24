@@ -2,7 +2,7 @@
 
 Layout in the MLflow UI:
 
-    experiment  leetcode-difficulty-estimator/<family>          (sklearn, rnn, llama, laya)
+    experiment  leetcode-difficulty-estimator/<family>          (sklearn, rnn, llama)
     run name    <family>-<model>[-<variant>]-s<seed>            e.g. sklearn-lsvm-tuned-s42
 
 Every run gets tags (family, model, variant, seed, job_type, dry_run when SAMPLE_LIMIT is set, the git

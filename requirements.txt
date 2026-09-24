@@ -3,13 +3,11 @@ python-leetcode
 pandas
 tensorflow
 scikit-learn>=1.7  # MLP sample_weight
-missingno
 matplotlib
 numpy
 keras_tuner
 tensorboard  # keras_tuner imports it for every trial
 beautifulsoup4
-laya
 scipy
 seaborn
 python-dotenv
