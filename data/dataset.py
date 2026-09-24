@@ -38,7 +38,7 @@ def compact_statement(text: str) -> str:
     """Statement + constraints (+ follow-up), without the worked examples.
 
     The examples are long (arrays, explanations) and say little about difficulty; the constraints
-    (n <= 10^5 ...) say a lot. Used by models with a short input window (Laya, the RNN).
+    (n <= 10^5 ...) say a lot. Used by models with a short input window (the RNN, Llama).
     """
     statement = re.split(r"\n\s*Example\s*1\s*:", text, maxsplit=1)[0]
     m = re.search(r"Constraints\s*:(.*)", text, flags=re.S)

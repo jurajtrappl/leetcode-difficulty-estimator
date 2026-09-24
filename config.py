@@ -48,9 +48,7 @@ class Settings:
     class_weighting: str = "balanced"   # "balanced" (rare classes count more) or "none"
 
     # --- pretrained models ------------------------------------------------------------------
-    laya_model: str = "convaiinnovations/laya"
     llama_model: str = "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"   # MLX, 4-bit (~5 GB)
-    max_tokens: int = 512               # truncation length for transformer inputs
 
     # --- outputs ----------------------------------------------------------------------------
     figures_dir: Path = ROOT / "confusion_matrices"     # plots (committed)
