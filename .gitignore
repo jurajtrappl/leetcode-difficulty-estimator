@@ -162,6 +162,8 @@ cython_debug/
 # Run outputs that are big or re-creatable (see config.py: results_dir)
 results/tuner/
 results/**/*.npy
+# fine-tuned Laya weights (~0.3 GB), re-created by laya_finetune.ipynb
+trained_models/laya_finetuned.pt
 
 # MLflow runs and artifacts (tracking.py / docker-compose.yml)
 mlflow/

@@ -1,0 +1,73 @@
+{
+  "settings": {
+    "max_trials": 20,
+    "max_epochs": 20,
+    "patience": 4,
+    "top_k": 3,
+    "recheck_folds": 3,
+    "batch_size": 32,
+    "min_count": 2,
+    "tuner_project": "birnn-v1",
+    "seed": 42,
+    "sample_limit": 0,
+    "class_weighting": "balanced",
+    "vocab_size": 3697,
+    "max_length": 313
+  },
+  "best_hp": {
+    "embedding_l2": 0.0001,
+    "embedding_dim": 64,
+    "embedding_dropout": 0.2,
+    "rnn_type": "gru",
+    "rnn_units": 64,
+    "pooling": "mean",
+    "dropout": 0.30000000000000004,
+    "learning_rate": 0.001,
+    "weight_power": 0.5
+  },
+  "recheck": [
+    {
+      "rank_in_search": 2,
+      "cv_macro_f1": 0.521584,
+      "cv_macro_f1_std": 0.007661,
+      "embedding_l2": 0.0001,
+      "embedding_dim": 64,
+      "embedding_dropout": 0.2,
+      "rnn_type": "gru",
+      "rnn_units": 64,
+      "pooling": "mean",
+      "dropout": 0.30000000000000004,
+      "learning_rate": 0.001,
+      "weight_power": 0.5
+    },
+    {
+      "rank_in_search": 1,
+      "cv_macro_f1": 0.508608,
+      "cv_macro_f1_std": 0.014565,
+      "embedding_l2": 1e-05,
+      "embedding_dim": 32,
+      "embedding_dropout": 0.3,
+      "rnn_type": "lstm",
+      "rnn_units": 128,
+      "pooling": "mean+max",
+      "dropout": 0.1,
+      "learning_rate": 0.003,
+      "weight_power": 1.0
+    },
+    {
+      "rank_in_search": 3,
+      "cv_macro_f1": 0.503813,
+      "cv_macro_f1_std": 0.016715,
+      "embedding_l2": 0.0001,
+      "embedding_dim": 32,
+      "embedding_dropout": 0.2,
+      "rnn_type": "lstm",
+      "rnn_units": 32,
+      "pooling": "mean",
+      "dropout": 0.2,
+      "learning_rate": 0.003,
+      "weight_power": 0.5
+    }
+  ],
+  "note": "written from the outputs of the 2026-09-23 run that saved rnn.keras (test macro-F1 0.509)"
+}
