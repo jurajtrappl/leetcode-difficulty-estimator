@@ -86,7 +86,7 @@ SAMPLE_LIMIT=300 jupyter lab      # dry run on a stratified sample of 300 proble
 ```
 
 Outputs go to `confusion_matrices/` (plots), `trained_models/` (models and best settings) and `results/` (caches
-and tables). Re-running a notebook reuses the saved searches and models as long as the settings haven't changed; a
+and tables). `python plot_summary.py` redraws the summary figure from the result tables. Re-running a notebook reuses the saved searches and models as long as the settings haven't changed; a
 changed setting retrains that part, and `RESEARCH = True` / `RETRAIN = True` at the top of a notebook forces it.
 
 ## Experiment tracking
