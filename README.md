@@ -13,40 +13,29 @@ LLM (Llama 3.1 8B) are compared on one shared, leak-free test set.
 - **The lead is real, not memorised.** Llama *does* remember LeetCode: with only the problem title it is almost as
   good as with the full statement. But on 876 problems published after its training cutoff, its full-statement score
   holds (0.63) while the title-only score drops by 0.09.
-- **Revisiting the 2024 version found a data leak** (the downsampling kept the oldest problems of each class, so
-  problem age predicted the label) that had inflated the reported accuracy. Fixed, with all data kept.
 
 ![Summary of results](confusion_matrices/summary.png)
 
 ## Authors and contributions
 
 The project started in 2023–24 as a semestral project for the Neural Networks course at MFF, Charles University
-(Faculty of Mathematics and Physics), by **Juraj Trappl** and **Filip Mihal**. In 2026 Juraj revisited it alone:
-reviewed the original work, fixed its mistakes and extended it. The 2024 slides and plots were removed, as their
-numbers were affected by the leak described below (they are still in the git history).
+(Faculty of Mathematics and Physics), by **Juraj Trappl** and **Filip Mihal**. Together we collected the problems
+through LeetCode's GraphQL API and compared TF-IDF features with scikit-learn models, MLPs, RNNs, BERT embeddings and
+few-shot prompting of Llama 2.
 
-**2023–24 (course project)**
+In 2026 I revisited it, reviewed the original work, fixed its mistakes and extended it:
 
-| Juraj Trappl | Filip Mihal |
-|---|---|
-| Data collection: LeetCode GraphQL scraper and dataset (`data/leetcode_graphql.py`) | Text preprocessing: HTML-free problem texts |
-| TF-IDF + MLP experiments (PCA / t-SNE reductions), trained on MetaCentrum | scikit-learn pipeline: TF-IDF features, perceptron, linear and RBF SVM, MLP classifier and regressor, SVD / feature selection |
-| RNN with Keras Tuner | Visualisation notebook |
-| BERT contextual embeddings + MLP (pooling variants, CNN feature extraction, SMOTE), class downsampling | |
-| Llama 2 few-shot prompting, slides, README | |
-
-**2026 (rework, Juraj Trappl)**
-
-- Found and fixed the problems of the original version: the downsampling leak, HTML cleaning that turned
-  `10^5` into `105`, the RNN vocabulary built on test data, and a Llama 2 prompt that showed the same example with
-  all three labels (details under [What was wrong in the 2024 version](#what-was-wrong-in-the-2024-version)).
-- One evaluation protocol for every model: all data, one stratified train/test split, class weights, macro-F1 / QWK
-  with bootstrap intervals; shared config and seeding (`config.py`, `data/dataset.py`).
-- sklearn models re-tuned with the same random-search budget each; RNN rebuilt (order-of-magnitude number tokens,
-  masked BiLSTM/GRU, tuned and CV-checked).
-- New model: Llama 3.1 8B via MLX with calibration and a memorisation check on newly fetched, post-cutoff problems.
-- Engineering: MLflow experiment tracking (local, Docker UI), secrets moved to `.env` and purged from history,
-  resumable caches and "reuse what's already trained" re-runs, dataset rebuilt from committed problem lists.
+- I fixed the problems I found in the original version: HTML cleaning that turned `10^5` into `105`, the RNN
+  vocabulary built on test data, and a Llama 2 prompt that showed the same example with all three labels (details
+  under [What was wrong in the 2024 version](#what-was-wrong-in-the-2024-version)).
+- I set up one evaluation protocol for every model: all data, one stratified train/test split, class weights,
+  macro-F1 and QWK as the scores, and shared config and seeding (`config.py`, `data/dataset.py`).
+- I re-tuned the sklearn models with the same random-search budget each and rebuilt the RNN (order-of-magnitude
+  number tokens, masked BiLSTM/GRU, tuned and CV-checked).
+- I added Llama 3.1 8B via MLX, with calibration and a memorisation check on newly fetched, post-cutoff problems.
+- On the engineering side: MLflow experiment tracking (local, Docker UI), secrets moved to `.env` and purged from
+  history, resumable caches, re-runs that reuse what is already trained, and a dataset rebuilt from committed
+  problem lists.
 
 ## Quick start
 
