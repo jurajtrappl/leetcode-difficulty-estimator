@@ -169,3 +169,8 @@ trained_models/laya_finetuned.pt
 mlflow/
 mlruns/
 
+# LeetCode's problem statements are LeetCode's content, so they aren't committed. The repo keeps only the problem
+# lists (data/problem_list.json, data/new_problem_list.json); `python data/rebuild_dataset.py` downloads the rest.
+data/leetcode_problems_dataset.json
+data/leetcode_new_problems.json
+data/problems_without_html.csv

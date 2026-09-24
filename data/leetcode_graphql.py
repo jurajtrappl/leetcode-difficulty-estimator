@@ -1,3 +1,9 @@
+"""The original scraper (December 2023): downloads ALL problems LeetCode lists today into data/leetcode_problems_dataset.json.
+
+To reproduce the experiments, use `python data/rebuild_dataset.py` instead: it downloads exactly the problems
+listed in data/problem_list.json, in the same order, so the train/test split matches. This script would give a
+different (larger) dataset today, and it needs LEETCODE_SESSION in .env.
+"""
 import json
 import leetcode
 import leetcode.auth
